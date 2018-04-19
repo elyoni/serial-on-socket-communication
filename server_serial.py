@@ -5,11 +5,16 @@ import traceback
 import select
 import sys # used to check what platform i am using
 import platform
+import serial
+
+import time
+
 
 DEBUG = True
 
 class ServerSocket(object):
     def __init__(self,host='127.0.0.1', port=50000, max_connection=5):
+        self.ser = serial.Serial('/dev/ttyUSB1', 115200, timeout=1)
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)# Create the Server Socket
         try:
             print('Socket Server is on')
@@ -36,6 +41,11 @@ class ServerSocket(object):
     def receive(self, connection):
         data = connection.recv(1024)
         if data:
+            if (data.decode('ascii') == "?id"):
+                print("got ?id")
+                self.ser.write(b'?id')
+
+                print("print lines", self.ser.read())
             print(data.decode('ascii'))
             self.send(connection, "hi you are connected")
         else:
