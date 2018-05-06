@@ -3,12 +3,15 @@
 String input_string = "";
 const String id = "{entity: [{ water_plant: { get: [bool get01(void),bool get02(void)], set: [void set01(void), void set02(void)]}}]}";
 
-
+enum WaterPlantState {Delay, FullHeight, MiddleHeight, FullDown};
+enum Mode {Automatic, Remote};
 
 //********************** Water Plant functions *********************
 class WaterPlant{
     private: 
         Servo servo;
+        WaterPlantState state;
+        Mode mode;
         void set_height(int percentage);
             
     public:
@@ -16,8 +19,45 @@ class WaterPlant{
         void full_height(void);
         void middle_height(void);
         void full_down(void);
+        void delay(void);
 };
+
+void WaterPlant::iter(void){
+    switch(mode){
+        case Automatic:
+            switch(state){
+                case FullHeight:
+                    full_height();
+                    state = delay;
+                    break;
+                case MiddleHeight:
+                    middle_height();
+                    state = delay;
+                    break;
+                case FullDown;
+                    full_down();
+                    state = delay;
+                    break;
+                case Delay:
+                    delay();
+                    break;
+            }
+
+            break;
+        case Remote:
+            break;
+
+    }
+
+}
+
+void WaterPlant::delay(void){
+    //TODO Need to add the delay aritmetic
+    break; 
+}
 void WaterPlant::init(int pin){
+    mode = Automatic;
+    state = FullHeight;
     servo.attach(pin);
     servo.write(75);
 }
