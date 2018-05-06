@@ -8,36 +8,42 @@ const String id = "{entity: [{ water_plant: { get: [bool get01(void),bool get02(
 //********************** Water Plant functions *********************
 class WaterPlant{
     private: 
-        int water_plant_pin;
+        Servo servo;
+        void set_height(int percentage);
             
     public:
         void init(int pin);
-        void set_height(int percentage);
         void full_height(void);
+        void middle_height(void);
         void full_down(void);
 };
 void WaterPlant::init(int pin){
-    water_plant_pin = pin;
-    pinMode(water_plant_pin, OUTPUT);
+    servo.attach(pin);
+    servo.write(75);
 }
 
 void WaterPlant::set_height(int percentage){
-   analogWrite(water_plant_pin, percentage);
+    // degree =  110 - percentage*7/20. 110 is the min and 75 is max
+    servo.write(110 - percentage*7/20);
 }
 
 void WaterPlant::full_height(void){
-   analogWrite(water_plant_pin, 220);
+    set_height(110);
+    delay(500);
+    set_height(100);
+}
+void WaterPlant::middle_height(void){
+    set_height(50);
 }
 
 void WaterPlant::full_down(void){
-   analogWrite(water_plant_pin, 170);
+    set_height(0);
 }
 
 //********************** Sand watch functions *********************
 class SandWatch{
     private: 
         int current_position;
-        int sand_watch_pin;
         Servo sand_servo;
     public:
         SandWatch();
@@ -119,6 +125,8 @@ void loop(){
             water_plant.full_height();
         }else if(input_string == "down"){ 
             water_plant.full_down();
+        }else if(input_string == "middle"){ 
+            water_plant.middle_height();
         }else if(input_string == "flip"){
             sand_watch.flip();
         }else{
