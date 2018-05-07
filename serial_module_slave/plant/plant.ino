@@ -1,9 +1,10 @@
 #include <Servo.h>
 
 String input_string = "";
-const String id = "{entity: [{ water_plant: { get: [bool get01(void),bool get02(void)], set: [void set01(void), void set02(void)]}}]}";
+const String id = "{entity: [{ waterPlant: { get: [bool get01(void),bool get02(void)], set: [void set01(void), void set02(void)]}}]}";
 
-enum WaterPlantState {Delay, FullHeight, MiddleHeight, FullDown};
+enum WaterPlantState {FullHeight, MiddleHeight, FullDown};
+enum WorkMode {Work, Delay}
 enum Mode {Automatic, Remote};
 
 //********************** Water Plant functions *********************
@@ -11,14 +12,15 @@ class WaterPlant{
     private: 
         Servo servo;
         WaterPlantState state;
+        WorkMode workMode 
         Mode mode;
         void set_height(int percentage);
             
     public:
         void init(int pin);
-        void full_height(void);
-        void middle_height(void);
-        void full_down(void);
+        void fullHeight(void);
+        void middleHeight(void);
+        void fullDown(void);
         void delay(void);
 };
 
@@ -27,22 +29,40 @@ void WaterPlant::iter(void){
         case Automatic:
             switch(state){
                 case FullHeight:
-                    full_height();
-                    state = delay;
+                    switch(workMode){
+                        case Work: 
+                            fullHeight();
+                            //TODO rember the delay point and move the work mode = delay.
+                            //I need to use micros(); to calc the time
+                            break;
+                        case Delay:
+                            delay();
+                            break;
+                    }
                     break;
                 case MiddleHeight:
-                    middle_height();
-                    state = delay;
+                    switch(workMode){
+                        case Work: 
+                            middleHeight();
+                            break;
+                        case Delay:
+                            delay();
+                            break;
+                    }
                     break;
                 case FullDown;
-                    full_down();
-                    state = delay;
+                    switch(workMode){
+                        case Work: 
+                            fullDown();
+                            break;
+                        case Delay:
+                            delay();
+                            break;
+                    }
                     break;
                 case Delay:
-                    delay();
                     break;
             }
-
             break;
         case Remote:
             break;
@@ -67,16 +87,16 @@ void WaterPlant::set_height(int percentage){
     servo.write(110 - percentage*7/20);
 }
 
-void WaterPlant::full_height(void){
+void WaterPlant::fullHeight(void){
     set_height(110);
     delay(500);
     set_height(100);
 }
-void WaterPlant::middle_height(void){
+void WaterPlant::middleHeight(void){
     set_height(50);
 }
 
-void WaterPlant::full_down(void){
+void WaterPlant::fullDown(void){
     set_height(0);
 }
 
@@ -87,7 +107,7 @@ class SandWatch{
         Servo sand_servo;
     public:
         SandWatch();
-        void init(int sand_watch_pin);
+        void init(int sandWatch_pin);
         void flip(void);
 };
 
@@ -96,8 +116,8 @@ SandWatch::SandWatch(){
     current_position = 0;
 }
 
-void SandWatch::init(int sand_watch_pin){
-    sand_servo.attach(sand_watch_pin);  // attaches the servo on pin 9 to the servo object
+void SandWatch::init(int sandWatch_pin){
+    sand_servo.attach(sandWatch_pin);  // attaches the servo on pin 9 to the servo object
 }
 
 void SandWatch::flip(void){
@@ -142,13 +162,13 @@ boolean new_serial_data(void){
     return false;
 }
 
-WaterPlant water_plant;
-SandWatch sand_watch;
+WaterPlant waterPlant;
+SandWatch sandWatch;
 
 void setup(){
     Serial.begin(115200);
-    sand_watch.init(9);
-    water_plant.init(10);
+    sandWatch.init(9);
+    waterPlant.init(10);
     input_string.reserve(200);
 }
 
@@ -162,13 +182,13 @@ void loop(){
             Serial.println("this is my id");
             Serial.println(id);
         }else if(input_string == "up"){ 
-            water_plant.full_height();
+            waterPlant.fullHeight();
         }else if(input_string == "down"){ 
-            water_plant.full_down();
+            waterPlant.fullDown();
         }else if(input_string == "middle"){ 
-            water_plant.middle_height();
+            waterPlant.middleHeight();
         }else if(input_string == "flip"){
-            sand_watch.flip();
+            sandWatch.flip();
         }else{
             Serial.print(input_string);
             Serial.println("What?");
