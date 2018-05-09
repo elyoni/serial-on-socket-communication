@@ -15,6 +15,8 @@ class WaterPlant{
         WorkMode workMode 
         Mode mode;
         void set_height(int percentage);
+        int delayStartPoint;
+        int delayDuration;
             
     public:
         void init(int pin);
@@ -32,8 +34,7 @@ void WaterPlant::iter(void){
                     switch(workMode){
                         case Work: 
                             fullHeight();
-                            //TODO rember the delay point and move the work mode = delay.
-                            //I need to use micros(); to calc the time
+                            delayStartPoint = millis()
                             break;
                         case Delay:
                             delay();
@@ -73,10 +74,13 @@ void WaterPlant::iter(void){
 
 void WaterPlant::delay(void){
     //TODO Need to add the delay aritmetic
-    break; 
+    if ((millis() - delayStartPoint) > delayDuration ){
+        //TODO move to the next state, maybe state++, I need to check what happend when overflow
+    }
 }
 void WaterPlant::init(int pin){
     mode = Automatic;
+    delayDuration = 60000*30;
     state = FullHeight;
     servo.attach(pin);
     servo.write(75);
