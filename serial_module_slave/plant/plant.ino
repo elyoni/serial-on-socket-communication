@@ -4,73 +4,61 @@ String input_string = "";
 const String id = "{entity: [{ waterPlant: { get: [bool get01(void),bool get02(void)], set: [void set01(void), void set02(void)]}}]}";
 
 enum WaterPlantState {FullHeight, MiddleHeight, FullDown};
-enum WorkMode {Work, Delay}
-enum Mode {Automatic, Remote};
+enum StateMode {Work, Delay}
+enum ControlMode {Automatic, Remote};
 
 //********************** Water Plant functions *********************
 class WaterPlant{
     private: 
         Servo servo;
-        WaterPlantState state;
-        WorkMode workMode 
-        Mode mode;
+        WaterPlantState heightState;
+        StateMode stateMode 
+        ControlMode controlMode;
         void set_height(int percentage);
         int delayStartPoint;
         int delayDuration;
-            
-    public:
-        void init(int pin);
+
+        void automation(void);
         void fullHeight(void);
         void middleHeight(void);
         void fullDown(void);
+        void nextState(void);
+    public:
+        void init(int pin);
         void delay(void);
 };
 
+
 void WaterPlant::iter(void){
-    switch(mode){
+    switch(controlMode){
         case Automatic:
-            switch(state){
-                case FullHeight:
-                    switch(workMode){
-                        case Work: 
-                            fullHeight();
-                            delayStartPoint = millis()
-                            break;
-                        case Delay:
-                            delay();
-                            break;
-                    }
-                    break;
-                case MiddleHeight:
-                    switch(workMode){
-                        case Work: 
-                            middleHeight();
-                            break;
-                        case Delay:
-                            delay();
-                            break;
-                    }
-                    break;
-                case FullDown;
-                    switch(workMode){
-                        case Work: 
-                            fullDown();
-                            break;
-                        case Delay:
-                            delay();
-                            break;
-                    }
-                    break;
-                case Delay:
-                    break;
-            }
+            automation()
             break;
         case Remote:
             break;
-
     }
-
 }
+
+void WaterPlant::nextState(void){
+    
+}
+
+void WaterPlant::automation(void){
+switch(heightState){
+    case FullHeight:
+        fullHeight();
+        break;
+    case MiddleHeight:
+        middleHeight();
+        break;
+    case FullDown;
+        fullDown();
+        break;
+    case Delay:
+        break;
+    }
+}
+
 
 void WaterPlant::delay(void){
     //TODO Need to add the delay aritmetic
@@ -79,9 +67,9 @@ void WaterPlant::delay(void){
     }
 }
 void WaterPlant::init(int pin){
-    mode = Automatic;
+    controlMode = Automatic;
     delayDuration = 60000*30;
-    state = FullHeight;
+    heightState = FullHeight;
     servo.attach(pin);
     servo.write(75);
 }
@@ -92,16 +80,49 @@ void WaterPlant::set_height(int percentage){
 }
 
 void WaterPlant::fullHeight(void){
-    set_height(110);
-    delay(500);
-    set_height(100);
+    switch(stateMode){
+        case Work: 
+            set_height(110);
+            delay(500);
+            set_height(100);
+            delayStartPoint = millis()
+            stateMode = Delay;
+            break;
+        case Delay:
+            if (delay()){
+                stateMode = Work;
+            }
+            break;
+    }
 }
 void WaterPlant::middleHeight(void){
-    set_height(50);
+    switch(stateMode){
+        case Work: 
+            set_height(50);
+            delayStartPoint = millis()
+            stateMode = Delay;
+            break;
+        case Delay:
+            if (delay()){
+                stateMode = Work;
+            }
+            break;
+    }
 }
 
 void WaterPlant::fullDown(void){
-    set_height(0);
+    switch(stateMode){
+        case Work: 
+            set_height(0);
+            delayStartPoint = millis()
+            stateMode = Delay;
+            break;
+        case Delay:
+            if (delay()){
+                stateMode = Work;
+            }
+            break;
+    }
 }
 
 //********************** Sand watch functions *********************
