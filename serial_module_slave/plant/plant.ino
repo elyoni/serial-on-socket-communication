@@ -3,8 +3,8 @@
 String input_string = "";
 const String id = "{entity: [{ waterPlant: { get: [bool get01(void),bool get02(void)], set: [void set01(void), void set02(void)]}}]}";
 
-enum WaterPlantState {FullHeight, MiddleHeight, FullDown};
-enum StateMode {Work, Delay}
+enum WaterPlantState {FullHeight, MiddleHeight, FullDown, Max_Val};
+enum StateMode {Work, Delay};
 enum ControlMode {Automatic, Remote};
 
 //********************** Water Plant functions *********************
@@ -12,27 +12,29 @@ class WaterPlant{
     private: 
         Servo servo;
         WaterPlantState heightState;
-        StateMode stateMode 
+        StateMode stateMode;
         ControlMode controlMode;
         void set_height(int percentage);
-        int delayStartPoint;
+        unsigned long delayStartPoint;
         int delayDuration;
 
         void automation(void);
+        void nextState(void);
+        bool plantDelay(void);
+    public:
+        void iter(void);
+        void height100(void);
         void fullHeight(void);
         void middleHeight(void);
         void fullDown(void);
-        void nextState(void);
-    public:
         void init(int pin);
-        void delay(void);
 };
 
 
 void WaterPlant::iter(void){
     switch(controlMode){
         case Automatic:
-            automation()
+            automation();
             break;
         case Remote:
             break;
@@ -51,24 +53,33 @@ switch(heightState){
     case MiddleHeight:
         middleHeight();
         break;
-    case FullDown;
+    case FullDown:
         fullDown();
-        break;
-    case Delay:
         break;
     }
 }
 
 
-void WaterPlant::delay(void){
-    //TODO Need to add the delay aritmetic
+bool WaterPlant::plantDelay(void){
     if ((millis() - delayStartPoint) > delayDuration ){
-        //TODO move to the next state, maybe state++, I need to check what happend when overflow
+        if (heightState+1 != Max_Val){
+             heightState = heightState+1;
+        }else{
+             heightState = FullHeight;
+        }
+        Serial.print("Moving, millis:");
+        Serial.print(millis());
+        Serial.print(" delaystartpoint:");
+        Serial.println(delayStartPoint);
+
+        return true;
+    }else{
+        return false;
     }
 }
 void WaterPlant::init(int pin){
     controlMode = Automatic;
-    delayDuration = 60000*30;
+    delayDuration = 1000; //60000*30; = 30 min
     heightState = FullHeight;
     servo.attach(pin);
     servo.write(75);
@@ -76,7 +87,7 @@ void WaterPlant::init(int pin){
 
 void WaterPlant::set_height(int percentage){
     // degree =  110 - percentage*7/20. 110 is the min and 75 is max
-    servo.write(110 - percentage*7/20);
+    servo.write(91 - percentage*7/20);
 }
 
 void WaterPlant::fullHeight(void){
@@ -85,11 +96,11 @@ void WaterPlant::fullHeight(void){
             set_height(110);
             delay(500);
             set_height(100);
-            delayStartPoint = millis()
+            delayStartPoint = millis();
             stateMode = Delay;
             break;
         case Delay:
-            if (delay()){
+            if (plantDelay()){
                 stateMode = Work;
             }
             break;
@@ -98,12 +109,12 @@ void WaterPlant::fullHeight(void){
 void WaterPlant::middleHeight(void){
     switch(stateMode){
         case Work: 
-            set_height(50);
-            delayStartPoint = millis()
+            set_height(70);
+            delayStartPoint = millis();
             stateMode = Delay;
             break;
         case Delay:
-            if (delay()){
+            if (plantDelay()){
                 stateMode = Work;
             }
             break;
@@ -113,12 +124,12 @@ void WaterPlant::middleHeight(void){
 void WaterPlant::fullDown(void){
     switch(stateMode){
         case Work: 
-            set_height(0);
-            delayStartPoint = millis()
+            set_height(50);
+            delayStartPoint = millis();
             stateMode = Delay;
             break;
         case Delay:
-            if (delay()){
+            if (plantDelay()){
                 stateMode = Work;
             }
             break;
@@ -192,17 +203,20 @@ SandWatch sandWatch;
 
 void setup(){
     Serial.begin(115200);
+    Serial.println("Starting");
     sandWatch.init(9);
     waterPlant.init(10);
     input_string.reserve(200);
 }
 
 void loop(){
+    waterPlant.iter();
+    /*
     if(new_serial_data()){
         Serial.println("********************************");
         Serial.println(input_string);
         Serial.println("********************************");
-        if(input_string == "?id"){
+       if(input_string == "?id"){
             clean_serial_buff();
             Serial.println("this is my id");
             Serial.println(id);
@@ -220,4 +234,5 @@ void loop(){
         }
         input_string = "";
     }
+    */
 }
