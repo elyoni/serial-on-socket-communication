@@ -3,9 +3,24 @@
 String input_string = "";
 const String id = "{entity: [{ waterPlant: { get: [bool get01(void),bool get02(void)], set: [void set01(void), void set02(void)]}}]}";
 
+enum Entity {WaterPlant, SandWatch}
 enum WaterPlantState {FullHeight, MiddleHeight, FullDown, Max_Val};
 enum StateMode {Work, Delay};
 enum ControlMode {Automatic, Remote};
+
+
+class Msg{
+    private:
+        Entity entity;
+        Serial serialConnection;
+        String msg;
+        void readSerial(void);
+        Entity getEntity(void);
+        void eraseMsg(void);
+    public:
+        void iter(void); // Use read serial 
+        
+}
 
 //********************** Water Plant functions *********************
 class WaterPlant{
@@ -55,6 +70,8 @@ switch(heightState){
         break;
     case FullDown:
         fullDown();
+        break;
+    case Delay:
         break;
     }
 }
@@ -234,5 +251,4 @@ void loop(){
         }
         input_string = "";
     }
-    */
 }
