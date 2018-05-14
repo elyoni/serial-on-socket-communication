@@ -3,7 +3,7 @@
 String input_string = "";
 const String id = "{entity: [{ waterPlant: { get: [bool get01(void),bool get02(void)], set: [void set01(void), void set02(void)]}}]}";
 
-enum Entity {WaterPlant, SandWatch}
+enum Entity {Water_Plant, Sand_Watch};
 enum WaterPlantState {FullHeight, MiddleHeight, FullDown, Max_Val};
 enum StateMode {Work, Delay};
 enum ControlMode {Automatic, Remote};
@@ -12,15 +12,14 @@ enum ControlMode {Automatic, Remote};
 class Msg{
     private:
         Entity entity;
-        Serial serialConnection;
+        //Serial serialConnection;
         String msg;
         void readSerial(void);
         Entity getEntity(void);
         void eraseMsg(void);
     public:
         void iter(void); // Use read serial 
-        
-}
+};
 
 //********************** Water Plant functions *********************
 class WaterPlant{
@@ -34,7 +33,6 @@ class WaterPlant{
         int delayDuration;
 
         void automation(void);
-        void nextState(void);
         bool plantDelay(void);
     public:
         void iter(void);
@@ -45,7 +43,6 @@ class WaterPlant{
         void init(int pin);
 };
 
-
 void WaterPlant::iter(void){
     switch(controlMode){
         case Automatic:
@@ -54,10 +51,6 @@ void WaterPlant::iter(void){
         case Remote:
             break;
     }
-}
-
-void WaterPlant::nextState(void){
-    
 }
 
 void WaterPlant::automation(void){
@@ -70,8 +63,6 @@ switch(heightState){
         break;
     case FullDown:
         fullDown();
-        break;
-    case Delay:
         break;
     }
 }
@@ -250,5 +241,5 @@ void loop(){
             Serial.println("What?");
         }
         input_string = "";
-    }
+    }*/
 }
