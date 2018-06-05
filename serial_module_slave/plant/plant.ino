@@ -4,7 +4,6 @@ String input_string = "";
 const String id = "{entity: [{ waterPlant: { get: [bool get01(void),bool get02(void)], set: [void set01(void), void set02(void)]}}]}";
 
 enum Entity {Water_Plant, Sand_Watch};
-enum WaterPlantState {FullHeight, MiddleHeight, FullDown, Max_Val};
 enum StateMode {Work, Delay};
 enum ControlMode {Automatic, Remote};
 
@@ -25,15 +24,17 @@ class Msg{
 class WaterPlant{
     private: 
         Servo servo;
-        WaterPlantState heightState;
+        int heightState;
         StateMode stateMode;
         ControlMode controlMode;
         void set_height(int percentage);
+        int heightDelta;
         unsigned long delayStartPoint;
-        int delayDuration;
+        int _delayDuration;
 
         void automation(void);
-        bool plantDelay(void);
+        void automationWork(void);
+        bool plantDelay(int delayDuration);
     public:
         void iter(void);
         void height100(void);
@@ -42,6 +43,17 @@ class WaterPlant{
         void fullDown(void);
         void init(int pin);
 };
+
+
+void WaterPlant::init(int pin){
+    stateMode = Work;
+    controlMode = Automatic;
+    //_delayDuration = 1000; //60000*30; = 30 min
+    heightState = 99; //Configure the stating point
+    heightDelta = 5;
+    servo.attach(pin);
+    servo.write(75);
+}
 
 void WaterPlant::iter(void){
     switch(controlMode){
@@ -54,43 +66,40 @@ void WaterPlant::iter(void){
 }
 
 void WaterPlant::automation(void){
-switch(heightState){
-    case FullHeight:
-        fullHeight();
+switch(stateMode){
+    case Work:
+        automationWork();
         break;
-    case MiddleHeight:
-        middleHeight();
-        break;
-    case FullDown:
-        fullDown();
+    case Delay:
+        if (plantDelay(5000)){
+            stateMode = Work;
+        }
         break;
     }
 }
 
+void WaterPlant::automationWork(void){
+    set_height(heightState);
+    heightState = heightState - heightDelta;
+    if (heightState < 0)
+        heightState = 0;
+    stateMode = Delay;
+}
 
-bool WaterPlant::plantDelay(void){
+bool WaterPlant::plantDelay(int delayDuration){
+    if (delayStartPoint == 0){
+        delayStartPoint = millis();
+    }
     if ((millis() - delayStartPoint) > delayDuration ){
-        if (heightState+1 != Max_Val){
-             heightState = heightState+1;
-        }else{
-             heightState = FullHeight;
-        }
         Serial.print("Moving, millis:");
         Serial.print(millis());
         Serial.print(" delaystartpoint:");
         Serial.println(delayStartPoint);
-
+        delayStartPoint = 0;
         return true;
     }else{
         return false;
     }
-}
-void WaterPlant::init(int pin){
-    controlMode = Automatic;
-    delayDuration = 1000; //60000*30; = 30 min
-    heightState = FullHeight;
-    servo.attach(pin);
-    servo.write(75);
 }
 
 void WaterPlant::set_height(int percentage){
@@ -98,51 +107,6 @@ void WaterPlant::set_height(int percentage){
     servo.write(91 - percentage*7/20);
 }
 
-void WaterPlant::fullHeight(void){
-    switch(stateMode){
-        case Work: 
-            set_height(110);
-            delay(500);
-            set_height(100);
-            delayStartPoint = millis();
-            stateMode = Delay;
-            break;
-        case Delay:
-            if (plantDelay()){
-                stateMode = Work;
-            }
-            break;
-    }
-}
-void WaterPlant::middleHeight(void){
-    switch(stateMode){
-        case Work: 
-            set_height(70);
-            delayStartPoint = millis();
-            stateMode = Delay;
-            break;
-        case Delay:
-            if (plantDelay()){
-                stateMode = Work;
-            }
-            break;
-    }
-}
-
-void WaterPlant::fullDown(void){
-    switch(stateMode){
-        case Work: 
-            set_height(50);
-            delayStartPoint = millis();
-            stateMode = Delay;
-            break;
-        case Delay:
-            if (plantDelay()){
-                stateMode = Work;
-            }
-            break;
-    }
-}
 
 //********************** Sand watch functions *********************
 class SandWatch{
