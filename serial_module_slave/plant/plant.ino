@@ -15,6 +15,27 @@ enum StateMode {Work, Delay};
 enum ControlMode {Automatic, Remote};
 
 
+class NonBlockDelay{
+    private:
+        unsigned long delayStartPoint;
+    public:
+        bool Delay(int delayDuration);
+
+}
+
+bool NonBlockDelay::Delay(int delayDuration){
+    //Non blocking command, When the time has pass it will return true
+    if (delayStartPoint == 0){
+        delayStartPoint = millis();
+    }
+    if ((millis() - delayStartPoint) > delayDuration ){
+        delayStartPoint = 0;
+        return true;
+    }else{
+        return false;
+    }
+}
+
 class Msg{
     private:
         Entity entity;
@@ -27,45 +48,56 @@ class Msg{
         void iter(void); // Use read serial 
 };
 
+class MotorMove{
+    //min  and max are the move range of the motor,
+    //the class will translate it to percentage
+    private:
+        int step_delta_;
+        int max_;
+        int min_;
+        Servo servo_;
+    public:
+        MotorMove(int min, int max) : min_(min), max_(max) {}
+        void init(int pin);
+        //Need to move here the setHeight
+};
+
+void MotorMove::init(int pin){
+    servo_.attach(pin);
+}
+
+
 //********************** Water Plant functions *********************
 class WaterPlant{
     private: 
-        Entity entityname;
-        Servo servo;
-        int heightState;
-        StateMode stateMode;
-        ControlMode controlMode;
-        void set_height(int percentage);
+        Entity entity_name_;
+        int height_state_;
+        ControlMode control_mode_;
         int heightDelta;
-        unsigned long delayStartPoint;
-        int _delayDuration;
+        NonBlockDelay delay;
 
         void automation(void);
         void automationWork(void);
         bool plantDelay(int delayDuration);
-        void remote(void);
-        void build_id(void);
+        void remote(void); //Not yet implemented
+        void buildId(void);
     public:
+        void setHeight(int percentage);
         void iter(void);
-        void height100(void);
-        void fullHeight(void);
-        void middleHeight(void);
-        void fullDown(void);
         void init(int pin);
 };
 
 WaterPlant::WaterPlant(){
-    entityName = Water_Plant;
-    stateMode = Work;
+    entity_name_ = Water_Plant;
     controlMode = Automatic;
 }
 
-void build_id(void){
+void buildId(void){
     JsonObject& id = jsonBuffer.createObject();
     id["name"] = "water_plant";
     JsonArray& get = id.createNestedArray("get");
     JsonArray& set = id.createNestedArray("set");
-    get.add("set_height(
+    get.add("setHeight(int, float)")
 
 }
 
@@ -73,10 +105,8 @@ void WaterPlant::init(int pin){
     // I configure the init function to use the servo class,
     // if I use the servo class in the constractor it would wont work
     //_delayDuration = 1000; //60000*30; = 30 min
-    heightState = 99; //Configure the stating point
+    height_state_ = 99; //Configure the stating point
     heightDelta = 5;
-    servo.attach(pin);
-    servo.write(75);
 }
 
 void WaterPlant::iter(void){
@@ -91,43 +121,19 @@ void WaterPlant::iter(void){
 }
 
 void WaterPlant::automation(void){
-switch(stateMode){
-    case Work:
+    if (delay.Delay(1000)){
         automationWork();
-        break;
-    case Delay:
-        if (plantDelay(1000)){
-            stateMode = Work;
-        }
-        break;
     }
 }
 
 void WaterPlant::automationWork(void){
-    set_height(heightState);
-    heightState = heightState - heightDelta;
-    if (heightState < 0)
-        heightState = 0;
-    stateMode = Delay;
+    setHeight(height_state_);
+    height_state_ = height_state_ - heightDelta;
+    if (height_state_ < 0)
+        height_state_ = 0;
 }
 
-bool WaterPlant::plantDelay(int delayDuration){
-    if (delayStartPoint == 0){
-        delayStartPoint = millis();
-    }
-    if ((millis() - delayStartPoint) > delayDuration ){
-        Serial.print("Moving, millis:");
-        Serial.print(millis());
-        Serial.print(" delaystartpoint:");
-        Serial.println(delayStartPoint);
-        delayStartPoint = 0;
-        return true;
-    }else{
-        return false;
-    }
-}
-
-void WaterPlant::set_height(int percentage){
+void WaterPlant::setHeight(int percentage){
     // degree =  110 - percentage*7/20. 110 is the min and 75 is max
     servo.write(91 - percentage*7/20);
 }
