@@ -1,6 +1,13 @@
 #include <Servo.h>
+#include <ArduinoJson.h>
+
+StaticJsonBuffer<200> jsonBuffer;
+JsonObject& id = jsonBuffer.createObject();
+JsonArray& entity = id.createNestedArray("entity");
+
 
 String input_string = "";
+
 const String id = "{entity: [{ waterPlant: { get: [bool get01(void),bool get02(void)], set: [void set01(void), void set02(void)]}}]}";
 
 enum Entity {Water_Plant, Sand_Watch};
@@ -23,6 +30,7 @@ class Msg{
 //********************** Water Plant functions *********************
 class WaterPlant{
     private: 
+        Entity entityname;
         Servo servo;
         int heightState;
         StateMode stateMode;
@@ -35,6 +43,8 @@ class WaterPlant{
         void automation(void);
         void automationWork(void);
         bool plantDelay(int delayDuration);
+        void remote(void);
+        void build_id(void);
     public:
         void iter(void);
         void height100(void);
@@ -44,10 +54,24 @@ class WaterPlant{
         void init(int pin);
 };
 
-
-void WaterPlant::init(int pin){
+WaterPlant::WaterPlant(){
+    entityName = Water_Plant;
     stateMode = Work;
     controlMode = Automatic;
+}
+
+void build_id(void){
+    JsonObject& id = jsonBuffer.createObject();
+    id["name"] = "water_plant";
+    JsonArray& get = id.createNestedArray("get");
+    JsonArray& set = id.createNestedArray("set");
+    get.add("set_height(
+
+}
+
+void WaterPlant::init(int pin){
+    // I configure the init function to use the servo class,
+    // if I use the servo class in the constractor it would wont work
     //_delayDuration = 1000; //60000*30; = 30 min
     heightState = 99; //Configure the stating point
     heightDelta = 5;
@@ -61,6 +85,7 @@ void WaterPlant::iter(void){
             automation();
             break;
         case Remote:
+            remote();
             break;
     }
 }
@@ -71,7 +96,7 @@ switch(stateMode){
         automationWork();
         break;
     case Delay:
-        if (plantDelay(5000)){
+        if (plantDelay(1000)){
             stateMode = Work;
         }
         break;
@@ -172,6 +197,7 @@ boolean new_serial_data(void){
 
 WaterPlant waterPlant;
 SandWatch sandWatch;
+Msg msg;
 
 void setup(){
     Serial.begin(115200);
