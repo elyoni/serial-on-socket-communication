@@ -1,0 +1,40 @@
+@startuml
+
+class NonBlockDelay{
+    - unsigned long delayEndPoint
+    + Delay(int delayDuration) :bool
+}
+
+class MotorMove{
+    - int step_delta_
+    - int max_
+    - int min_
+    - Servo servo_
+    - height_state_
+    # MotorMove(int min, int max, int step_delta)
+    + init(int pin) :void
+    + moveClockwise() :bool
+    + moveAntiClockwise() :bool
+    + set_stepDelta(int step_delta) :void
+}
+note "moveClockwise()\nmoveAntiClockwise()\nReturn False if can't move anymore" as ClockwiseN1
+MotorMove .. ClockwiseN1
+
+class WaterPlant{
+    - Entity entity_name_
+    - ControlMode control_mode_
+    - NonBlockDelay delay_;
+}
+WaterPlant --o NonBlockDelay
+WaterPlant -> Entity
+WaterPlant -> ControlMode
+enum ControlMode {
+    Automatic
+    Remote
+}
+enum Entity {
+    Water_Plant
+    Sand_Watch
+}
+
+@enduml
