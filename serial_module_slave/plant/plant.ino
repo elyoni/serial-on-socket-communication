@@ -17,7 +17,7 @@ enum ControlMode {Automatic, Remote};
 
 class NonBlockDelay{
     private:
-        unsigned long delayStartPoint;
+        unsigned long delayEndPoint;
     public:
         bool Delay(int delayDuration);
 
@@ -25,11 +25,11 @@ class NonBlockDelay{
 
 bool NonBlockDelay::Delay(int delayDuration){
     //Non blocking command, When the time has pass it will return true
-    if (delayStartPoint == 0){
-        delayStartPoint = millis();
+    if (delayEndPoint == 0){
+        delayEndPoint = millis() + delayDuration;
     }
-    if ((millis() - delayStartPoint) > delayDuration ){
-        delayStartPoint = 0;
+    if (millis() > delayEndPoint ){
+        delayEndPoint = 0;
         return true;
     }else{
         return false;
@@ -55,6 +55,7 @@ class MotorMove{
         int step_delta_;
         int max_;
         int min_;
+        int height_state_
         Servo servo_;
     public:
         MotorMove(int min, int max) : min_(min), max_(max) {}
@@ -71,14 +72,13 @@ void MotorMove::init(int pin){
 class WaterPlant{
     private: 
         Entity entity_name_;
-        int height_state_;
+        int height_state_;  //TODO need to remove it from the class
         ControlMode control_mode_;
-        int heightDelta;
+        int heightDelta;//TODO need to remove it from the class
         NonBlockDelay delay;
 
         void automation(void);
         void automationWork(void);
-        bool plantDelay(int delayDuration);
         void remote(void); //Not yet implemented
         void buildId(void);
     public:
