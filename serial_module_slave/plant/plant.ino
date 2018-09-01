@@ -1,9 +1,9 @@
 #include <Servo.h>
 #include <ArduinoJson.h>
 
-StaticJsonBuffer<200> jsonBuffer;
-JsonObject& id = jsonBuffer.createObject();
-JsonArray& entity = id.createNestedArray("entity");
+StaticJsonDocument<200> jsonDoc;
+JsonObject root = jsonDoc.to<JsonObject>();
+JsonArray entity = root.createNestedArray("entity");
 
 
 String input_string = "";
@@ -80,7 +80,7 @@ class WaterPlant{
         void automation(void);
         void automationWork(void);
         void remote(void); //Not yet implemented
-        void buildId(void);
+        void buildRoot(void);
     public:
         void setHeight(int percentage);
         void iter(void);
@@ -92,12 +92,11 @@ WaterPlant::WaterPlant(){
     controlMode = Automatic;
 }
 
-void buildId(void){
-    JsonObject& id = jsonBuffer.createObject();
-    id["name"] = "water_plant";
-    JsonArray& get = id.createNestedArray("get");
-    JsonArray& set = id.createNestedArray("set");
-    get.add("setHeight(int, float)")
+void buildRoot(void){
+    root["name"] = "water_plant";
+    JsonArray get = root.createNestedArray("get");
+    JsonArray set = root.createNestedArray("set");
+    get.add("setHeight(int, float)");
 
 }
 
