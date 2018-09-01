@@ -21,7 +21,7 @@ class NonBlockDelay{
     public:
         bool Delay(int delayDuration);
 
-}
+};
 
 bool NonBlockDelay::Delay(int delayDuration){
     //Non blocking command, When the time has pass it will return true
@@ -55,7 +55,7 @@ class MotorMove{
         int step_delta_;
         int max_;
         int min_;
-        int height_state_
+        int height_state_;
         Servo servo_;
     public:
         MotorMove(int min, int max) : min_(min), max_(max) {}
@@ -82,6 +82,7 @@ class WaterPlant{
         void remote(void); //Not yet implemented
         void buildRoot(void);
     public:
+        WaterPlant();
         void setHeight(int percentage);
         void iter(void);
         void init(int pin);
@@ -89,7 +90,7 @@ class WaterPlant{
 
 WaterPlant::WaterPlant(){
     entity_name_ = Water_Plant;
-    controlMode = Automatic;
+    control_mode_ = Automatic;
 }
 
 void buildRoot(void){
@@ -109,7 +110,7 @@ void WaterPlant::init(int pin){
 }
 
 void WaterPlant::iter(void){
-    switch(controlMode){
+    switch(control_mode_){
         case Automatic:
             automation();
             break;
@@ -132,9 +133,17 @@ void WaterPlant::automationWork(void){
         height_state_ = 0;
 }
 
+
+void WaterPlant::remote(void){
+    if (delay.Delay(1000)){
+        automationWork();
+    }
+}
+
 void WaterPlant::setHeight(int percentage){
     // degree =  110 - percentage*7/20. 110 is the min and 75 is max
-    servo.write(91 - percentage*7/20);
+    //servo.write(91 - percentage*7/20);
+    
 }
 
 
