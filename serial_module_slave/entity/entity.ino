@@ -1,4 +1,4 @@
-#include <vector>
+#include <ArduinoSTL.h>
 
 
 class Entity{
@@ -6,6 +6,7 @@ class Entity{
         String _name;
     public:
         void set_name(String);
+        void DoSomthing(void);
 };
 
 void Entity::set_name(String name){
@@ -14,6 +15,7 @@ void Entity::set_name(String name){
 
 class EntityDemo : public Entity{
     EntityDemo(String name);
+    void DoSomthing(void);
 };
 
 EntityDemo::EntityDemo(String name){
@@ -34,15 +36,16 @@ class SerialServer{
         void clean_input_string(void);
         void clean_serial_buff(void);
     public:
+        SerialServer();
         void iter(void);
-        void add_new_entity(Entity entity);
+        void add_new_entity(EntityDemo entity);
 
 };
 SerialServer::SerialServer(){
     _input_string = "";
     Serial.begin(115200);
 }
-void clean_input_string(void){
+void SerialServer::clean_input_string(void){
     _input_string = "";
 }
 
@@ -71,9 +74,7 @@ void SerialServer::iter(void){
 
 
 
-
-
-serial_server SerialServer;
+SerialServer serial_server;
 
 
 void setup(){
